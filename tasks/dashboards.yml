@@ -1,0 +1,6 @@
+---
+- name: Install the dashboards for each Koha instance 
+  include: dashboard.yml
+  with_items: "{{ queries }}"
+  loop_control:
+    loop_var: query

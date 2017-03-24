@@ -1,0 +1,11 @@
+---
+# vars file for koha-dashboard
+
+- queries:
+    - name: bibcount
+      description: Outputs the number of marc records in the database
+      query: "select count(*) from biblio"
+
+    - name: patroncount
+      description: Outputs the number of patrons in the database
+      query: "SELECT COUNT(*) FROM borrowers"

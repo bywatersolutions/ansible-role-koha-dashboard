@@ -1,0 +1,11 @@
+---
+# tasks file for koha-dashboard
+- name: Get list of Koha instances on this server
+  command: koha-list
+  become: true
+  become_user: root
+  register: koha_instances
+
+- name: Install the dashboards for each Koha instance 
+  include: dashboards.yml instance={{ item }}
+  with_items: "{{ koha_instances.stdout_lines }}"

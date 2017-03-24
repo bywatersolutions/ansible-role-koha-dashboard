@@ -1,0 +1,12 @@
+#!/bin/bash
+
+dashboard="/var/lib/koha/{{ instance }}/dashboard"
+
+if [[ ! -p $dashboard/{{ query.name }} ]]; then
+    mkfifo $dashboard/{{ query.name }}
+fi
+
+while :
+do
+    /usr/sbin/koha-mysql {{ instance }} -t -e "{{ query.sql }}" > $dashboard/{{ query.name }}
+done

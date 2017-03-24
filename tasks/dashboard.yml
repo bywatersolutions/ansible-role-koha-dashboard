@@ -1,0 +1,36 @@
+---
+- name: Create dashboard scripts directory
+  file:
+    path: /var/lib/koha/{{ instance }}/dashboard
+    state: directory
+    owner: "{{ instance }}-koha"
+    group: "{{ instance }}-koha"
+    mode: 0755
+  become: true
+  become_user: root
+
+- name: Create dashboard scripts directory
+  file:
+    path: /var/lib/koha/{{ instance }}/dashboard/scripts
+    state: directory
+    owner: "{{ instance }}-koha"
+    group: "{{ instance }}-koha"
+    mode: 0755
+  become: true
+  become_user: root
+
+- template:
+    src: script.j2
+    dest: /var/lib/koha/{{ instance }}/dashboard/scripts/{{ query.name }}
+    owner: "{{ instance }}-koha"
+    group: "{{ instance }}-koha"
+    mode: 0755
+  become: true
+  become_user: root
+
+- cron:
+    name: Create cron for dashboard {{ query.name }} for instance {{ instance }}
+    job: /usr/bin/flock -n /tmp/{{ instance }}.{{ query.name }} /var/lib/koha/{{ instance }}/dashboard/scripts/{{ query.name }}
+    user: "{{ instance }}-koha"
+  become: true
+  become_user: "{{ instance }}-koha"
