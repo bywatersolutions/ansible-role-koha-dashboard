@@ -13,6 +13,7 @@ Role Variables
 
 Define in number of pipes to be created in under the 'queries' variable, which is a list of hashes. Each element in the queries list should have a name and sql key, the description is for humans only and is not used by Ansible for anything.
 
+```YAML
 queries:
     - name: bibcount
       description: Outputs the number of marc records in the database
@@ -21,6 +22,7 @@ queries:
     - name: patroncount
       description: Outputs the number of patrons in the database
       sql: "SELECT COUNT(*) FROM borrowers"
+```
 
 Dependencies
 ------------
