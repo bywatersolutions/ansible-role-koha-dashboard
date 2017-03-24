@@ -24,6 +24,21 @@ queries:
       sql: "SELECT COUNT(*) FROM borrowers"
 ```
 
+Once installed, when you run
+```bash
+cat /var/lib/koha/<instance>/dashboard/bibcount
+```
+
+you'll see
+
+```
++----------+
+| count(*) |
++----------+
+|       12 |
++----------+
+```
+
 Dependencies
 ------------
 
