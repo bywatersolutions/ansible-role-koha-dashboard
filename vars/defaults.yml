@@ -2,10 +2,182 @@
 # vars file for koha-dashboard
 
 - queries:
-    - name: bibcount
+    - name: bad_issue_dates
+      description: Shows all date / datetime / timestamp fields in issues table like '0000-00-00'
+      query: >
+        "SELECT
+            itemnumber,
+            biblionumber,
+            title,
+            issues.date_due,
+            issues.returndate,
+            issues.lastreneweddate,
+            issues.timestamp,
+            issues.issuedate
+        FROM
+            issues
+            INNER JOIN items USING (itemnumber)
+            INNER JOIN biblio USING (biblionumber)
+        WHERE
+            DATE(  issues.date_due ) = '0000-00-00'
+            OR DATE( issues.returndate ) = '0000-00-00'
+            OR DATE( issues.lastreneweddate ) = '0000-00-00'
+            OR DATE( issues.timestamp ) = '0000-00-00'
+            OR DATE( issues.issuedate ) = '0000-00-00'"
+
+    - name: bad_item_dates
+      description: Shows all date / datetime / timestamp fields in items table like '0000-00-00'
+      query: >
+        "SELECT
+            items.itemnumber,
+            items.biblionumber, 
+            biblio.title, 
+            items.dateaccessioned, 
+            items.replacementpricedate, 
+            items.datelastborrowed, 
+            items.datelastseen, 
+            items.itemlost_on, 
+            items.withdrawn_on, 
+            items.timestamp, 
+            items.onloan
+        FROM
+            items 
+            INNER JOIN biblio USING (biblionumber)
+        WHERE
+            DATE(  items.dateaccessioned ) = '0000-00-00'
+            OR DATE( items.replacementpricedate ) = '0000-00-00'
+            OR DATE( items.datelastborrowed ) = '0000-00-00'
+            OR DATE( items.datelastseen ) = '0000-00-00'
+            OR DATE( items.itemlost_on ) = '0000-00-00'
+            OR DATE( items.withdrawn_on ) = '0000-00-00'
+            OR DATE( items.timestamp ) = '0000-00-00'
+            OR DATE( items.onloan ) = '0000-00-00'"
+
+    - name: bad_item_onloan_dates
+      description: Items with onloan = '0000-00-00'
+      query: >
+        "SELECT
+            items.itemnumber,
+            items.biblionumber,
+            biblio.title,
+            items.onloan,
+            items.dateaccessioned,
+            items.replacementpricedate,
+            items.datelastborrowed,
+            items.datelastseen,
+            items.itemlost_on,
+            items.withdrawn_on,
+            items.timestamp
+        FROM
+            items
+            INNER JOIN biblio USING (biblionumber)
+        WHERE
+            DATE( items.onloan ) = '0000-00-00'"
+
+    - name: bib_count
       description: Outputs the number of marc records in the database
       query: "select count(*) from biblio"
 
-    - name: patroncount
+    - name: item_count
+      description: Outputs the number of items in the database
+      query: "SELECT COUNT(*) FROM items"
+
+    - name: items_never_checked_out
+      description: Show ten items that have never been checked out.
+      query: >
+        "select 
+            barcode, 
+            homebranch, 
+            itype 
+        from 
+            items 
+            left join old_issues using (itemnumber) 
+        where 
+            onloan is null 
+            and old_issues.itemnumber is null 
+            and notforloan=0 
+            and damaged=0 
+            and itemlost=0 
+            and withdrawn=0 
+        limit 10"
+
+    - name: message_queue
+      description: Messages queued today.
+      query: >
+        "SELECT
+            message_id,
+            borrowernumber,
+            subject,
+            letter_code,
+            message_transport_type,
+            to_address,
+            status,
+            time_queued
+        FROM
+            message_queue
+        WHERE
+            DATE( time_queued ) = CURRENT_DATE
+        ORDER BY
+            time_queued"
+
+    - name: overdue_rules
+      description: Ovedue rules, displayed nicely.
+      query: >
+        "SELECT
+            letter_number,
+            branchcode,
+            categorycode,
+            delay,      
+            letter_code,
+            debarred
+        FROM
+           (
+                    SELECT
+                        '1' AS letter_number, branchcode, categorycode,
+                        delay1 AS delay, letter1 AS letter_code,
+                        debarred1 AS debarred
+                    FROM overduerules
+                UNION
+                    SELECT
+                        '2' AS letter_number, branchcode, categorycode,
+                        delay2 AS delay, letter2 AS letter_code,
+                        debarred2 AS debarred
+                    FROM overduerules
+                UNION
+                    SELECT
+                        '3' AS letter_number, branchcode, categorycode,
+                        delay3 AS delay, letter3 AS letter_code,
+                        debarred3 AS debarred
+                    FROM overduerules
+           ) AS odr"
+
+    - name: system_preferences
+      description: Shows sysprefs and their values.
+      query: >
+        "SELECT
+            variable,
+            value
+        FROM
+            systempreferences"
+
+    - name: patron_count
       description: Outputs the number of patrons in the database
       query: "SELECT COUNT(*) FROM borrowers"
+
+    - name: zebra_queue
+      description: Shows unprocessed bibs in zebraqueue.
+      query: >
+        "SELECT 
+            biblio_auth_number AS biblionumber,
+            title,
+            time AS 'time queued'
+        FROM
+            zebraqueue
+            INNER JOIN biblio ON (zebraqueue.biblio_auth_number = biblio.biblionumber)
+        WHERE
+            done=0
+            AND server='biblioserver'
+            AND operation = CONCAT( 'specialU', 'pdate' )
+        ORDER BY
+            time"
+
